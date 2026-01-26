@@ -1,0 +1,18 @@
+<div class="content">
+    <div class="btns">
+        <button (click)="farmar()">Click</button>
+        <button (click)="maisClick()">+1 por Click ({{v1}})</button>
+        <button (click)="clickSegundos()">+1 Click/segundo ({{v2}})</button>
+        <button (click)="sorte()">+5% Sorte ({{v3}})</button>
+        <button (click)="maisCrit()">+20 critico ({{v4}})</button>
+    </div>
+    
+    <h1>{{pontos}}</h1>
+
+    <div class="detalhes">
+        <p>Ponto por click: {{qtd}}</p>
+        <p>Ponto por segundo: {{pSegundos}}</p>
+        <p>Sorte: {{luck}}%</p>
+        <p>Crítico: {{critico}}</p>
+    </div>
+</div>
