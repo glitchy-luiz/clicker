@@ -4,15 +4,42 @@
         <button (click)="maisClick()">+1 por Click ({{v1}})</button>
         <button (click)="clickSegundos()">+1 Click/segundo ({{v2}})</button>
         <button (click)="sorte()">+5% Sorte ({{v3}})</button>
-        <button (click)="maisCrit()">+20 critico ({{v4}})</button>
+        <button (click)="maisCrit()">+25 critico ({{v4}})</button>
     </div>
     
-    <h1>{{pontos}}</h1>
-
-    <div class="detalhes">
-        <p>Ponto por click: {{qtd}}</p>
-        <p>Ponto por segundo: {{pSegundos}}</p>
-        <p>Sorte: {{luck}}%</p>
-        <p>Crítico: {{critico}}</p>
+    <h1 id="pontos">{{pontos}}</h1>
+    <div class="floating-container">
+        <div 
+            *ngFor="let float of floatingNumbers; let i = index;"
+            class="floating-number"
+            [style.left.px]="float.x"
+            [style.top.px]="float.y"
+        >
+            +{{float.valor}}
+            <span *ngIf="float.isCrit" class="crit">CRIT!</span>
+        </div>
     </div>
+
+    <div class="info">
+        <div class="detalhes">
+            <p>Ponto por click: {{qtd}}</p>
+            <p>Ponto por segundo: {{pSegundos}}</p>
+            <p>Sorte: {{luck}}%</p>
+            <p>Crítico: {{critico}}</p>
+            <p>Gastos: {{gastos}}</p>
+        </div>
+        <div class="buffs">
+            <p *ngIf="buffs.qtd">Ponto/Click: {{buffs.qtd}}</p>
+            <p *ngIf="buffs.ps">Ponto/Segundos: {{buffs.ps}}</p>
+            <p *ngIf="buffs.desc">Desconto: {{buffs.desc * 100}}%</p>
+        </div>
+    </div>
+
+    <button (click)="reset()">Reset</button>
+    <h2>Conquistas {{conquistas.length}}/3:</h2>
+    <div class="conq" *ngFor="let c of conquistas; index as i">
+        <h3 >{{c.nome}}: {{c.desc}}</h3>
+        <p>{{c.requisito}}</p>
+    </div>
+
 </div>

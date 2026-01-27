@@ -1,0 +1,11 @@
+<div class="floating-container">
+    <div 
+        *ngFor="let float of floatingNumbers; let i = index;"
+        class="floating-number"
+        [style.left.px]="float.x"
+        [style.top.px]="float.y"
+    >
+        +{{float.valor}}
+        <span *ngIf="float.isCrit" class="crit">CRIT!</span>
+    </div>
+</div>
