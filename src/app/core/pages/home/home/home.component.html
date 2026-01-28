@@ -16,7 +16,8 @@
             [style.top.px]="float.y"
         >
             +{{float.valor}}
-            <span *ngIf="float.isCrit" class="crit">CRIT!</span>
+            <span *ngIf="float.tipo == 1" class="crit">CRIT!</span>
+            <span *ngIf="float.tipo == 2" class="salvo">SEM GASTO!</span>
         </div>
     </div>
 
@@ -27,16 +28,18 @@
             <p>Sorte: {{luck}}%</p>
             <p>Crítico: {{critico}}</p>
             <p>Gastos: {{gastos}}</p>
+            <p>Upgrades totais: {{upgrades}}</p>
         </div>
         <div class="buffs">
             <p *ngIf="buffs.qtd">Ponto/Click: {{buffs.qtd}}</p>
             <p *ngIf="buffs.ps">Ponto/Segundos: {{buffs.ps}}</p>
             <p *ngIf="buffs.desc">Desconto: {{buffs.desc * 100}}%</p>
+            <p *ngIf="buffs.ignora">Chance de salvar pontos: {{buffs.ignora}}%</p>
         </div>
     </div>
 
     <button (click)="reset()">Reset</button>
-    <h2>Conquistas {{conquistas.length}}/3:</h2>
+    <h2>Conquistas {{conquistas.length}}/{{conquistasLista.length}}:</h2>
     <div class="conq" *ngFor="let c of conquistas; index as i">
         <h3 >{{c.nome}}: {{c.desc}}</h3>
         <p>{{c.requisito}}</p>

@@ -14,7 +14,8 @@ import { IConquista } from '../../../interfaces/conquista';
 })
 export class HomeComponent {
   qtd: number = 1
-  pontos: number = 0
+  pontos: number = 5000
+
   pSegundos: number = 0
   luck = 0
   critico: number = 50
@@ -22,17 +23,55 @@ export class HomeComponent {
   v2: number = 15
   v3: number = 50
   v4: number = 100
+
+  gastos: number = 0
+  upgrades: number = 0
+  resetPcento: number = 0.01
+
   conquistas: IConquista[] = []
+  conquistasLista: IConquista[] = [
+    {
+      nome: 'dinheiro',
+      desc: '+5 ponto permanente',
+      requisito: 'pontue 500',
+      condicao: 'pontos > 500',
+      bonus: 'qtd += 5',
+    },
+    {
+      nome: 'segundos',
+      desc: '+5 ponto/segundo permanente',
+      requisito: 'tenha 5 pontos/segundo',
+      condicao: 'pSegundos >= 5',
+      bonus: 'ps += 5',
+    },
+    {
+      nome: 'economico',
+      desc: '10% desconto permanente',
+      requisito: 'pontue 500 gastando menos de 100',
+      condicao: 'gastos < 100 && this.pontos >= 500',
+      bonus: 'desc += 0.1',
+    },
+    {
+      nome: 'dia de compras',
+      desc: '10% de chance de ignorar o valor de uma compra',
+      requisito: 'compre 30 upgrades',
+      condicao: 'upgrades >= 30',
+      bonus: 'ignora += 10',
+    },
+  ];
   buffs = {
     qtd: 0,
     ps: 0,
     desc: 0,
     mult: 1,
-    bonus: 0
-  }
-  gastos: number = 0
+    bonus: 0,
+    ignora: 0
+  };
 
-  constructor(private cdr: ChangeDetectorRef, private critComponent: CriticoComponent) {
+  floatingNumbers: { id: number; x: number; y: number; valor?: number; tipo: number }[] = [];
+  nextId = 0;
+
+  constructor(private cdr: ChangeDetectorRef) {
     afterNextRender(() => {
       const id = setInterval(() => {
         this.pontos += this.pSegundos + this.buffs.ps;
@@ -48,40 +87,36 @@ export class HomeComponent {
     this.crit()
   }
 
+  // funções de upgrades
   maisClick(){
-    if(this.pontos < this.v1){
-      return
-    }
-    this.pontos -= this.v1 - Math.floor(this.v1 * this.buffs.desc)
-    this.gastos += this.v1 - Math.floor(this.v1 * this.buffs.desc)
-
-    // this.v1 += Math.round(this.v1/2)
+    const res = this.compra(this.v1)
+    if(!res){return}
     this.v1 += 5
     this.qtd += 1
   }
 
   clickSegundos(){
-    if(this.pontos < this.v2){
-      return
-    }
-
-    this.pontos -= this.v2 - Math.floor(this.v2 * this.buffs.desc)
-    this.gastos += this.v2 - Math.floor(this.v2 * this.buffs.desc)
+    const res = this.compra(this.v2)
+    if(!res){return}
     this.v2 += Math.round(this.v2/2)
     this.pSegundos += 1
   }
 
   sorte(){
-    if(this.pontos < this.v3){
-      return
-    }
-
-    this.pontos -= this.v3- Math.floor(this.v3 * this.buffs.desc)
-    this.gastos += this.v3 - Math.floor(this.v3 * this.buffs.desc)
+    const res = this.compra(this.v3)
+    if(!res){return}
     this.v3 = this.v3 *2
     this.luck += 5
   }
 
+  maisCrit(){
+    const res = this.compra(this.v4)
+    if(!res){return}
+    this.v4 = this.v4 * 3
+    this.critico += 25
+  }
+
+  //funções de apoio e lógica
   crit(){
     const rng = Math.floor(Math.random() * (100 - 0))
     console.log(rng)
@@ -89,44 +124,13 @@ export class HomeComponent {
       this.pontos += this.critico
       console.log('Critico!')
 
-      this.showCrit()
+      this.showNotification(1, this.critico)
     }
-  }
-  
-  floatingNumbers: { id: number; x: number; y: number; valor: number; isCrit: boolean }[] = [];
-  private nextId = 0;
-  showCrit(){
-    const rect = (document.getElementById('pontos') as HTMLElement)?.getBoundingClientRect();
-    const x = rect ? rect.left + rect.width/2 + (Math.random()*60 - 30) : window.innerWidth/2;
-    const y = rect ? rect.top + (Math.random()*40 - 20) : window.innerHeight/2;
-    const isCrit =true
-    this.floatingNumbers.push({
-      id: this.nextId++,
-      x,
-      y,
-      valor: this.critico,
-      isCrit
-    });
-
-    // Remove após 2 segundos
-    setTimeout(() => {
-      this.floatingNumbers = this.floatingNumbers.filter(n => n.id !== this.nextId-1);
-    }, 2000);
-  }
-
-  maisCrit(){
-    if(this.pontos < this.v4){
-      return
-    }
-
-    this.pontos -= this.v4 - Math.floor(this.v4 * this.buffs.desc)
-    this.gastos += this.v4 - Math.floor(this.v4 * this.buffs.desc)
-    this.v4 = this.v4 * 3
-    this.critico += 25
   }
 
   reset(){
     this.validaConquista()
+    this.porcentagemReset()
     this.qtd = 1
     this.pontos = 0
     this.pSegundos = 0
@@ -137,52 +141,63 @@ export class HomeComponent {
     this.v3 = 50
     this.v4 = 100
     this.gastos = 0
-
+    this.upgrades = 0
   }
 
   validaConquista(){
-    const c1:IConquista = {
-      nome: 'dinheiro',
-      desc: '+5 ponto permanente',
-      requisito: 'pontue 500'
+    for (let i = 0; i < this.conquistasLista.length; i++){
+      this.verificaConquista(this.conquistasLista[i])
     }
-    const c2:IConquista = {
-      nome: 'segundos',
-      desc: '+5 ponto/segundo permanente',
-      requisito: 'tenha 5 pontos/segundo'
-    }
-    const c3:IConquista = {
-      nome: 'economico',
-      desc: '10% desconto permanente',
-      requisito: 'pontue 500 gastando menos de 100'
+  }
+
+  porcentagemReset(){
+    this.buffs.ps = Math.floor(this.gastos * this.resetPcento)
+  }
+
+
+  //funções de otimização e refatoramento
+  compra(custo: number){
+    if(this.pontos < custo){
+      return false
     }
 
-    if (this.pontos > 500){
-      if (!this.conquistas.includes(c1)){
-        this.conquistas.push(c1)
-      }
-    }
-    if (this.pSegundos >= 5){
-      if (!this.conquistas.includes(c2)){
-        this.conquistas.push(c2)
-      }
-    }
-    if (this.gastos < 100 && this.pontos >= 500){
-      if (!this.conquistas.includes(c3)){
-        this.conquistas.push(c3)
-      }
-    }
+    let preco: number = custo - Math.floor(custo * this.buffs.desc)
 
-    if (this.conquistas.includes(c1)){
-      this.buffs.qtd = 5
+    const rng = Math.floor(Math.random() * (100 - 0))
+    if (rng < this.buffs.ignora){
+      this.showNotification(2)
+      preco = 0
     }
-    if (this.conquistas.includes(c2)){
-      this.buffs.ps = 5
-    }
-    if(this.conquistas.includes(c3)){
-      this.buffs.desc = 0.1
-    }
+    this.pontos -= preco
+    this.gastos += preco
+    this.upgrades += 1
+    return true
+  }
 
-    console.log(this.conquistas)
+  showNotification(tipo: number, dado?: number,){
+    const rect = (document.getElementById('pontos') as HTMLElement)?.getBoundingClientRect();
+    const x = rect ? rect.left + rect.width/2 + (Math.random()*60 - 30) : window.innerWidth/2;
+    const y = rect ? rect.top + (Math.random()*40 - 20) : window.innerHeight/2;
+    const isCrit =true
+    this.floatingNumbers.push({
+      id: this.nextId++,
+      x,
+      y,
+      valor: dado,
+      tipo
+    });
+
+    setTimeout(() => {
+      this.floatingNumbers = this.floatingNumbers.filter(n => n.id !== this.nextId-1);
+    }, 2000);
+  }
+
+  verificaConquista(conq: IConquista){
+    if (eval('this.' + conq.condicao)){
+      if (!this.conquistas.includes(conq)){
+        this.conquistas.push(conq)
+        eval('this.buffs.' + conq.bonus)
+      }
+    }
   }
 }
