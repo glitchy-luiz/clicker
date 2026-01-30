@@ -27,6 +27,11 @@ export class HomeComponent {
   gastos: number = 0
   upgrades: number = 0
   resetPcento: number = 0.01
+  // critExtra: number = 0
+  seqCrit: number = 1
+  seq5: boolean = false
+  clicks: number = 0
+  addCrit: number = 0
 
   conquistas: IConquista[] = []
   conquistasLista: IConquista[] = [
@@ -58,6 +63,27 @@ export class HomeComponent {
       condicao: 'upgrades >= 30',
       bonus: 'ignora += 10',
     },
+    {
+      nome: 'MAIS!!!',
+      desc: 'Adiciona 110% do seu P/S ao valor do crítico',
+      requisito: 'tenha +150 de crítico',
+      condicao: 'critico >= 150',
+      bonus: "critExtra =  1.1",
+    },
+    {
+      nome: 'Em sequência',
+      desc: 'escala críticos em sequência',
+      requisito: 'acerte 5 críticos seguidos',
+      condicao: 'seq5',
+      bonus: 'nada = 0',
+    },
+    {
+      nome: 'clicks, apenas',
+      desc: 'dobra os pontos por click',
+      requisito: 'de mais de 50 clicks',
+      condicao: 'clicks >= 50',
+      bonus: 'mult += 1 ',
+    },
   ];
   buffs = {
     qtd: 0,
@@ -65,7 +91,9 @@ export class HomeComponent {
     desc: 0,
     mult: 1,
     bonus: 0,
-    ignora: 0
+    ignora: 0,
+    critExtra: 0,
+    nada:0,
   };
 
   floatingNumbers: { id: number; x: number; y: number; valor?: number; tipo: number }[] = [];
@@ -83,7 +111,8 @@ export class HomeComponent {
   }
 
   farmar(){
-    this.pontos += this.qtd + this.buffs.qtd
+    this.pontos += (this.qtd + this.buffs.qtd) * this.buffs.mult
+    this.clicks += 1
     this.crit()
   }
 
@@ -121,10 +150,20 @@ export class HomeComponent {
     const rng = Math.floor(Math.random() * (100 - 0))
     console.log(rng)
     if (rng < this.luck){
-      this.pontos += this.critico
+      this.addCrit = this.critico + Math.floor((this.pSegundos + this.buffs.ps) * this.buffs.critExtra)
+      if (this.conquistas.includes(this.conquistasLista[5])){
+        this.addCrit = (this.critico + Math.floor((this.pSegundos + this.buffs.ps) * this.buffs.critExtra)) * (this.seqCrit)
+      }
       console.log('Critico!')
-
-      this.showNotification(1, this.critico)
+      
+      this.showNotification(1, this.addCrit)
+      this.seqCrit += 1
+      this.pontos += this.addCrit
+      if (this.seqCrit == 6){
+        this.seq5 = true
+      }
+    } else{
+      this.seqCrit = 1
     }
   }
 
@@ -151,7 +190,7 @@ export class HomeComponent {
   }
 
   porcentagemReset(){
-    this.buffs.ps = Math.floor(this.gastos * this.resetPcento)
+    this.buffs.ps += Math.floor(this.gastos * this.resetPcento)
   }
 
 

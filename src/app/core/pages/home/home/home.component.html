@@ -16,7 +16,7 @@
             [style.top.px]="float.y"
         >
             +{{float.valor}}
-            <span *ngIf="float.tipo == 1" class="crit">CRIT!</span>
+            <span *ngIf="float.tipo == 1" class="crit">CRIT! x{{seqCrit - 1}}</span>
             <span *ngIf="float.tipo == 2" class="salvo">SEM GASTO!</span>
         </div>
     </div>
@@ -29,6 +29,7 @@
             <p>Crítico: {{critico}}</p>
             <p>Gastos: {{gastos}}</p>
             <p>Upgrades totais: {{upgrades}}</p>
+            <p>Clicks totais: {{clicks}}</p>
         </div>
         <div class="buffs">
             <p *ngIf="buffs.qtd">Ponto/Click: {{buffs.qtd}}</p>
